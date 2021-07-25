@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.utils import shuffle
 from .codebook import Codebook
 from .neighborhood import NeighborhoodFactory
-from .normalization import NormalizerFactory
 from .learningrate import LearningrateFactory
 from . import clusters as cluster
 
@@ -86,7 +85,8 @@ class SOM():
 
     def _weights(self, nodes, dim):
         weights = torch.zeros(nodes, dim)
-        nn.init.normal_(weights, std=0.1) 
+        #nn.init.normal_(weights, std=0.1)
+        nn.init.xavier_uniform_(weights) 
         return weights
 
     def _compute_distance(self,input_1, input_2, p=2.0):
@@ -263,7 +263,7 @@ class SOM():
         plt.imshow(self.value_plot_u_matrix)
         plt.show()
 
-    def heatmap_view(self):
+    def heatmap_view(self, min_max_scaler=False):
 
         dict_names_final = self.dict_names_final['train']
         self.res_final = dict()
@@ -274,6 +274,11 @@ class SOM():
                     _res.append(np.nan)
                     continue 
                 dd = torch.stack(dict_names_final[_id])
+
+                if min_max_scaler != False:
+                    dd = min_max_scaler.inverse_transform(dd)
+                    dd = torch.tensor(dd,dtype=torch.float32)
+
                 _res.append(torch.mean(dd[:, idx]))
 
             value_plot = np.expand_dims(_res, axis=0).reshape(self.mapsize)
